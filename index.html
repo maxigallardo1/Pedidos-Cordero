@@ -1,0 +1,834 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hacé tu pedido</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Caveat+Brush&family=Fraunces:opsz,wght@9..144,600;9..144,800&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#f6efe5; --card:#fff; --ink:#2b1a14; --muted:#7a675c; --line:#e8dccd;
+    --brand:#8a2a1c; --brand-2:#6b1e14; --ok:#2f7d4f; --warn:#a15c00; --off:#b9aea3;
+    --r:14px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:"DM Sans",system-ui,sans-serif;background:var(--bg);color:var(--ink);padding-bottom:96px;-webkit-tap-highlight-color:transparent}
+  button{font:inherit;color:inherit;border:0;background:none;cursor:pointer}
+  input,textarea,select{font:inherit;color:inherit}
+  .wrap{max-width:640px;margin:0 auto;padding:0 16px}
+
+  header{background:linear-gradient(135deg,var(--brand),var(--brand-2));color:#fff;padding:44px 0 30px;border-radius:0 0 28px 28px}
+  header .hola{font-size:15px;font-weight:700;letter-spacing:2px;text-transform:uppercase;opacity:.85}
+  header h1{font-family:"Caveat Brush",cursive;font-weight:400;font-size:58px;line-height:1;margin-top:2px}
+  header .rubro{font-weight:700;letter-spacing:1.5px;font-size:14px;margin-top:6px;opacity:.95}
+  header .dir{font-size:14px;opacity:.85;margin-top:2px}
+  header p{opacity:.92;margin-top:10px;font-size:17px}
+  .status{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+  .pill{background:rgba(255,255,255,.18);border-radius:99px;padding:6px 12px;font-size:14px;font-weight:500}
+  .pill.dot::before{content:"";display:inline-block;width:8px;height:8px;border-radius:50%;background:#7CFFB0;margin-right:7px;vertical-align:1px}
+  .pill.dot.closed::before{background:#ffb3a1}
+  .aviso{background:#fff4d6;border:1px solid #f1d58a;color:#6b4a00;border-radius:var(--r);padding:12px 14px;margin-top:16px;font-size:15px}
+
+  .tabs{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:18px 0 6px}
+  .tab{background:var(--card);border:1.5px solid var(--line);border-radius:18px;padding:16px 10px;text-align:center;font-weight:700;font-size:16px;position:relative}
+  .tab .ic{display:block;font-size:34px;margin-bottom:4px}
+  .tab.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+  .tab.off{opacity:.55}
+  .tab .badge{position:absolute;top:8px;right:8px;font-size:11px;background:var(--off);color:#fff;border-radius:99px;padding:2px 7px}
+
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .drink{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:14px 12px;display:flex;flex-direction:column;align-items:center;text-align:center;gap:6px}
+  .drink .ic{font-size:34px}
+  .drink b{font-size:15px;line-height:1.2}
+  .drink small{color:var(--muted)}
+  .drink.agotado{opacity:.5}
+
+  .miPedido{background:var(--card);border:1.5px solid var(--line);border-radius:var(--r);padding:14px;margin-top:16px}
+  .miPedido b{display:block;font-size:17px}
+  .miPedido .acciones{display:flex;gap:8px;align-items:center;margin-top:10px}
+  .miPedido .acciones .btn{text-decoration:none;font-size:15px}
+  .miPedido .acciones .x{margin-left:auto}
+  .cerradoWp{background:var(--card);border:2px solid var(--brand);border-radius:var(--r);padding:16px;margin-top:16px}
+  .cerradoWp b{display:block;font-size:17px;margin-bottom:6px}
+  .cerradoWp a{display:inline-block;margin:8px 8px 0 0;padding:10px 14px;border-radius:12px;background:var(--brand);color:#fff;font-weight:700;text-decoration:none}
+
+  section h2{font-family:Fraunces,serif;font-size:22px;margin:14px 0 4px}
+  .sub{color:var(--muted);font-size:14px;margin-bottom:10px}
+  .list{background:var(--card);border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
+  .row{display:flex;align-items:center;gap:12px;padding:13px 14px;border-top:1px solid var(--line)}
+  .row:first-child{border-top:0}
+  .row .name{flex:1;font-weight:500}
+  .row .name small{display:block;color:var(--muted);font-weight:400;font-size:13px}
+  .row.agotado .name{color:var(--off);text-decoration:line-through}
+  .tag{font-size:12px;font-weight:700;color:#fff;background:var(--off);padding:3px 8px;border-radius:99px}
+
+  .step{display:flex;align-items:center;gap:4px}
+  .step button{width:34px;height:34px;border-radius:50%;background:#f3ebdf;font-size:20px;font-weight:700;line-height:1}
+  .step button.plus{background:var(--brand);color:#fff}
+  .step span{min-width:26px;text-align:center;font-weight:700}
+  .quick{display:flex;gap:8px;margin:10px 0 0;flex-wrap:wrap}
+  .chip{padding:7px 12px;border-radius:99px;border:1px solid var(--line);background:var(--card);font-size:14px;font-weight:500}
+
+  .card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:14px;display:flex;align-items:center;gap:12px;margin-bottom:10px}
+  .card .name{flex:1}
+  .card b{display:block}
+  .card small{color:var(--muted);display:block}
+  .btn{background:var(--brand);color:#fff;padding:10px 16px;border-radius:12px;font-weight:700}
+  .btn.ghost{background:#f3ebdf;color:var(--ink)}
+  .btn.block{width:100%;padding:15px;font-size:17px;border-radius:14px}
+  .btn:disabled{background:var(--off);cursor:not-allowed}
+
+  .locked{color:var(--muted);background:var(--card);border:1px dashed var(--line);border-radius:var(--r);padding:16px;text-align:center}
+
+  .bar{position:fixed;left:0;right:0;bottom:0;padding:12px 16px calc(12px + env(safe-area-inset-bottom));background:linear-gradient(transparent,var(--bg) 30%);z-index:10}
+  .bar .btn{max-width:608px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;box-shadow:0 8px 24px rgba(138,42,28,.35)}
+  .bar.hide{display:none}
+
+  .sheet-bg{position:fixed;inset:0;background:rgba(30,18,10,.45);z-index:20;display:none}
+  .sheet-bg.open{display:block}
+  .sheet{position:fixed;left:0;right:0;bottom:0;max-height:92vh;overflow:auto;background:var(--bg);border-radius:20px 20px 0 0;z-index:21;transform:translateY(100%);transition:transform .25s ease;padding:8px 0 24px}
+  .sheet.open{transform:none}
+  .grab{width:42px;height:5px;background:var(--line);border-radius:9px;margin:6px auto 10px}
+  .sheet h3{font-family:Fraunces,serif;font-size:22px}
+  .sheet .head{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+  .x{font-size:26px;line-height:1;padding:4px 8px;color:var(--muted)}
+  fieldset{border:0;margin:16px 0}
+  legend{font-weight:700;margin-bottom:8px}
+  legend small{font-weight:400;color:var(--muted)}
+  .opts{display:flex;flex-wrap:wrap;gap:8px}
+  .opt{position:relative}
+  .opt input{position:absolute;opacity:0;pointer-events:none}
+  .opt span{display:block;padding:9px 13px;border-radius:12px;border:1.5px solid var(--line);background:var(--card);font-weight:500}
+  .opt input:checked + span{border-color:var(--brand);background:#f8e6e1;color:var(--brand)}
+  .opt span em{font-style:normal;font-size:13px;color:var(--muted)}
+  .big .opt{flex:1}
+  .big .opt span{text-align:center;padding:14px 10px}
+  .big .opt span small{display:block;font-size:13px;color:var(--muted);margin-top:2px}
+  label.f{display:block;font-weight:700;margin:14px 0 6px}
+  .in{width:100%;padding:12px 14px;border:1.5px solid var(--line);border-radius:12px;background:var(--card)}
+  .in:focus{outline:none;border-color:var(--brand)}
+
+  .sum{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:4px 14px;margin-top:6px}
+  .sum .it{display:flex;gap:10px;padding:10px 0;border-top:1px solid var(--line)}
+  .sum .it:first-child{border-top:0}
+  .sum .it div{flex:1}
+  .sum .it small{display:block;color:var(--muted)}
+  .sum .rm{color:var(--brand);font-weight:700;font-size:14px}
+  .tot{display:flex;justify-content:space-between;font-size:19px;font-weight:700;margin:14px 0 4px}
+  .note{color:var(--muted);font-size:14px}
+  .err{color:#b3261e;font-size:14px;margin-top:8px;min-height:18px}
+  .eta{background:#eaf5ee;color:var(--ok);border-radius:12px;padding:10px 12px;font-weight:500;margin-top:10px}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <div class="hola">¡Bienvenido a</div>
+    <h1 id="shopName"></h1>
+    <div class="rubro">EMPANADERÍA | SANDWICHERÍA</div>
+    <div class="dir" id="shopDir"></div>
+    <p>Armá tu pedido y mandalo por WhatsApp en un toque.</p>
+    <div class="status">
+      <span class="pill dot" id="pillOpen"></span>
+      <span class="pill" id="pillTime"></span>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="aviso" id="aviso" hidden></div>
+  <div class="cerradoWp" id="cerradoWp" hidden></div>
+  <div class="miPedido" id="miPedido" hidden></div>
+  <nav class="tabs" id="tabs"></nav>
+  <div id="menu"></div>
+</main>
+
+<div class="bar hide" id="bar">
+  <button class="btn block" id="openCart"><span id="barQty"></span><span id="barTotal"></span></button>
+</div>
+
+<!-- Sheet: armar sándwich -->
+<div class="sheet-bg" id="bgSand"></div>
+<div class="sheet" id="sheetSand" role="dialog" aria-modal="true">
+  <div class="wrap">
+    <div class="grab"></div>
+    <div class="head"><h3 id="sandTitle"></h3><button class="x" data-close="Sand" aria-label="Cerrar">×</button></div>
+    <div id="sandBody"></div>
+  </div>
+</div>
+
+<!-- Sheet: carrito / checkout -->
+<div class="sheet-bg" id="bgCart"></div>
+<div class="sheet" id="sheetCart" role="dialog" aria-modal="true">
+  <div class="wrap">
+    <div class="grab"></div>
+    <div class="head"><h3>Tu pedido</h3><button class="x" data-close="Cart" aria-label="Cerrar">×</button></div>
+    <div class="aviso" id="modBanner" hidden style="margin:0 0 10px"></div>
+    <div class="sum" id="cartItems"></div>
+
+    <fieldset>
+      <legend>¿Cómo lo querés?</legend>
+      <div class="opts big">
+        <label class="opt"><input type="radio" name="entrega" value="retiro" checked><span>🏃 Retiro<small id="etaRetiro"></small></span></label>
+        <label class="opt"><input type="radio" name="entrega" value="envio"><span>🛵 Envío<small id="etaEnvio"></small></span></label>
+      </div>
+      <div id="envioFields" hidden>
+        <label class="f" for="zona">Barrio</label>
+        <input class="in" id="zona" placeholder="Ej: Barrio Norte, Yerba Buena…">
+        <label class="f" for="dir">Dirección</label>
+        <input class="in" id="dir" placeholder="Calle y número" autocomplete="street-address">
+        <label class="f" for="ref">Referencia <span class="note">(opcional)</span></label>
+        <input class="in" id="ref" placeholder="Ej: casa portón negro, entre calles…">
+        <p class="note" id="envioNote" style="margin-top:8px"></p>
+      </div>
+      <div class="eta" id="eta"></div>
+    </fieldset>
+
+    <label class="f" for="nombre">Tu nombre</label>
+    <input class="in" id="nombre" placeholder="Para saber de quién es el pedido" autocomplete="given-name">
+
+    <fieldset>
+      <legend>Pago</legend>
+      <div class="opts">
+        <label class="opt"><input type="radio" name="pago" value="Efectivo" checked><span>💵 Efectivo</span></label>
+        <label class="opt"><input type="radio" name="pago" value="Transferencia"><span>📲 Transferencia</span></label>
+      </div>
+      <div id="vueltoWrap">
+        <label class="f" for="vuelto">¿Con cuánto pagás? <span class="note">(opcional, para el vuelto)</span></label>
+        <input class="in" id="vuelto" inputmode="numeric" placeholder="Ej: 20000">
+      </div>
+    </fieldset>
+
+    <label class="f" for="nota">Aclaraciones <span class="note">(opcional)</span></label>
+    <textarea class="in" id="nota" rows="2" placeholder="Algo que tengamos que saber"></textarea>
+
+    <div class="tot"><span>Total</span><span id="cartTotal"></span></div>
+    <p class="note" id="totNote"></p>
+    <div class="err" id="err"></div>
+    <button class="btn block" id="send">Enviar pedido por WhatsApp</button>
+  </div>
+</div>
+
+<!-- Sheet: confirmación con número de pedido -->
+<div class="sheet-bg" id="bgOk"></div>
+<div class="sheet" id="sheetOk" role="dialog" aria-modal="true">
+  <div class="wrap" style="text-align:center">
+    <div class="grab"></div>
+    <p class="note" style="font-size:15px">Tu número de pedido</p>
+    <div id="okNum" style="font-family:Fraunces,serif;font-size:64px;font-weight:800;color:var(--brand);line-height:1.1"></div>
+    <p style="font-size:18px;font-weight:700;margin-top:4px">A nombre de <span id="okNombre"></span></p>
+    <p class="note" id="okTxt" style="margin:8px 0 18px;font-size:15px"></p>
+    <a class="btn block" id="okWa" target="_blank" rel="noopener" style="display:block;text-decoration:none;background:#1f9d55">Enviar pedido por WhatsApp ➜</a>
+    <p class="note" style="margin-top:12px">⚠️ El pedido nos llega recién cuando lo envíes en WhatsApp.</p>
+    <p class="note" style="margin-top:8px">¿Querés cambiar algo después? Volvé a entrar a esta página y tocá <b>Modificar</b>, o <a id="okCancel" target="_blank" rel="noopener" style="color:var(--brand)">cancelá tu pedido</a>.</p>
+    <button class="btn ghost block" data-close="Ok" style="margin-top:12px">Volver y modificar</button>
+  </div>
+</div>
+
+<script>
+/* =====================================================================
+   CONFIGURACIÓN — todo lo editable está acá.
+   Precios = DE EJEMPLO. Reemplazalos por los reales.
+   ===================================================================== */
+const CONFIG = {
+  nombre: "Lo del Cordero",
+  direccion: "Pasaje Santiago del Estero 1494, Yerba Buena",
+  whatsapp: "5493815880485",   // número del local: 549 + característica sin 0 + número sin 15
+  // URL del contador de Google Apps Script (ver contador.gs). Vacío = código aleatorio en vez de número correlativo
+  contadorUrl: "",
+  // Dirección completa de comanda.html una vez subida, ej: "https://tuusuario.github.io/pedidos/comanda.html"
+  // Vacío = se calcula sola (misma carpeta que esta página)
+  urlComanda: "",
+
+  // Estado del día. Si completás sheetCsvUrl, estos valores se pisan con los de la planilla
+  // (así cambiás la demora desde el celular sin tocar el código).
+  sheetCsvUrl: "",
+  estado: {
+    abierto: true,        // false = cierra el local aunque esté en horario
+    pedidosWhatsapp: true,// false = "no tomamos pedidos por WhatsApp, llamanos" (ej: domingos a full)
+    demoraRetiro: 30,     // minutos
+    extraEnvio: 15,       // minutos que se suman a la demora de retiro para envío
+    agotados: [],         // ids de productos sin stock, ej: ["roquefort","esfijas"]
+    aviso: ""             // mensaje arriba de todo, ej: "Hoy hay mucha demora"
+  },
+
+  turnos: {
+    mediodia: { nombre: "Mediodía", desde: "11:00", hasta: "15:30", categorias: ["empanadas", "bebidas"] },
+    noche:    { nombre: "Noche",    desde: "19:30", hasta: "01:00", categorias: ["empanadas", "sandwiches", "papas", "bebidas"] }
+  },
+  forzarTurno: null,
+  horasModificable: 3,    // cuánto tiempo el cliente ve "Modificar / Cancelar" en la web después de pedir      // para probar: "mediodia" o "noche". En producción: null
+
+  // Teléfonos para llamar cuando no se toman pedidos por WhatsApp
+  telefonos: [
+    { nombre: "Local", numero: "381 400-0000" },
+    { nombre: "Celular", numero: "381 500-0000" }
+  ],
+
+  bebidas: [
+    { id: "coca-500",   nombre: "Coca-Cola 500 ml",    precio: 2000, ic: "🥤" },
+    { id: "coca-15",    nombre: "Coca-Cola 1,5 L",     precio: 3800, ic: "🍾" },
+    { id: "sprite-15",  nombre: "Sprite 1,5 L",        precio: 3500, ic: "🍾" },
+    { id: "fanta-15",   nombre: "Fanta 1,5 L",         precio: 3500, ic: "🍾" },
+    { id: "agua-500",   nombre: "Agua 500 ml",         precio: 1500, ic: "💧" },
+    { id: "saborizada", nombre: "Agua saborizada 1,5 L", precio: 3000, ic: "🧃" }
+  ],
+
+  empanadas: {
+    precioUnidad: 1500,
+    precioDocena: 16000,  // se aplica cada 12 (mezclando gustos)
+    gustos: [
+      { id: "carne-suave",    nombre: "Carne suave" },
+      { id: "carne-picante",  nombre: "Carne picante" },
+      { id: "pollo-suave",    nombre: "Pollo suave" },
+      { id: "pollo-picante",  nombre: "Pollo picante" },
+      { id: "queso-verdeo",   nombre: "Queso, huevo y verdeo" },
+      { id: "jamon-queso",    nombre: "Jamón y queso" },
+      { id: "ternera",        nombre: "Ternera, queso y tomate" },
+      { id: "cantimpalo",     nombre: "Cantimpalo, aceituna y queso" },
+      { id: "roquefort",      nombre: "Roquefort, apio y queso" },
+      { id: "doble-queso",    nombre: "Doble queso" },
+      { id: "queso-tomate",   nombre: "Queso, aceituna y tomate" },
+      { id: "sfijas",         nombre: "Sfijas" }
+      // Para un gusto con precio propio (fuera de la docena): { id:"x", nombre:"X", precio: 1800 }
+    ]
+  },
+
+  sandwiches: {
+    nota: "Todos los sándwiches salen con papas fritas.",
+    // plato: true = "al plato": se elige guarnición en vez de pan y toppings
+    items: [
+      { id: "milanesa",        nombre: "Milanesa",          desc: "Milanesa de carne",                     precio: 12000 },
+      { id: "milanesa-esp",    nombre: "Milanesa especial", desc: "Jamón, queso y huevo a la plancha",     precio: 15000 },
+      { id: "milanesa-cord",   nombre: "Milanesa Cordero",  desc: "Cheddar y bacon",                       precio: 15000 },
+      { id: "milanesa-plato",  nombre: "Milanesa al plato", desc: "Con papas fritas o ensalada",           precio: 13000, plato: true },
+      { id: "lomito",          nombre: "Lomito",            desc: "",                                      precio: 14000 },
+      { id: "lomito-esp",      nombre: "Lomito especial",   desc: "Jamón, queso y huevo a la plancha",     precio: 17000 },
+      { id: "lomito-cord",     nombre: "Lomito Cordero",    desc: "Cheddar y bacon",                       precio: 17000 },
+      { id: "lomito-plato",    nombre: "Lomito al plato",   desc: "Con papas fritas o ensalada",           precio: 15000, plato: true },
+      { id: "radical",         nombre: "Radical",           desc: "Medallón de carne de 200 g",            precio: 15000 },
+      { id: "radical-esp",     nombre: "Radical especial",  desc: "Jamón, queso y huevo a la plancha",     precio: 18000 },
+      { id: "radical-cord",    nombre: "Radical Cordero",   desc: "Cheddar y bacon",                       precio: 18000 }, // VERIFICAR precio
+      { id: "radical-plato",   nombre: "Radical al plato",  desc: "Con papas fritas o ensalada",           precio: 16000, plato: true },
+      { id: "vegetariano",     nombre: "Vegetariano",       desc: "Huevo y queso",                         precio: 10000 },
+      { id: "hamburguesa",     nombre: "Hamburguesa",       desc: "",                                      precio: 10000 }
+    ],
+    guarniciones: ["Papas fritas", "Ensalada"],
+    panes: [
+      { id: "frances", nombre: "Pan francés" },
+      { id: "arabe",   nombre: "Pan árabe" }      // sin costo extra
+    ],
+    toppings: ["Lechuga", "Mayonesa", "Tomate", "Sabora", "Ketchup", "Salsa criolla", "Cebolla cocida"],
+    extras: [
+      { id: "jamon",   nombre: "Jamón",   precio: 1000 },
+      { id: "queso",   nombre: "Queso",   precio: 1000 },
+      { id: "huevo",   nombre: "Huevo",   precio: 1000 },
+      { id: "bacon",   nombre: "Bacon",   precio: 1500 },
+      { id: "cheddar", nombre: "Cheddar", precio: 1500 }
+    ]
+  },
+
+  papas: [
+    { id: "papas-clasicas",   nombre: "Papas clásicas",   desc: "Porción de papas fritas",                  precio: 8000 },
+    { id: "papas-cordero",    nombre: "Papas Cordero",    desc: "Queso cremoso, bacon y cebolla de verdeo", precio: 11000 },
+    { id: "papas-americanas", nombre: "Papas americanas", desc: "Cheddar y bacon",                          precio: 11000 },
+    { id: "revuelto",         nombre: "Revuelto Gramajo", desc: "Papas, huevo y jamón",                     precio: 11000 }
+    // ½ Revuelto Gramajo: agregar cuando tenga precio
+  ]
+};
+/* ===================================================================== */
+
+const $ = s => document.querySelector(s);
+const money = n => "$" + Math.round(n).toLocaleString("es-AR");
+const esc = s => String(s).replace(/[&<>"']/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
+const toMin = hhmm => { const [h, m] = hhmm.split(":").map(Number); return h * 60 + m; };
+const hhmm = d => d.toLocaleTimeString("es-AR", { hour: "2-digit", minute: "2-digit", hour12: false });
+
+const state = { emp: {}, papas: {}, beb: {}, sand: [], tab: "empanadas" };
+let estado = { ...CONFIG.estado };
+
+/* ---------- turno actual ---------- */
+function turnoActual() {
+  if (CONFIG.forzarTurno) return { key: CONFIG.forzarTurno, ...CONFIG.turnos[CONFIG.forzarTurno] };
+  const now = new Date(), m = now.getHours() * 60 + now.getMinutes();
+  for (const [key, t] of Object.entries(CONFIG.turnos)) {
+    const a = toMin(t.desde), b = toMin(t.hasta);
+    const dentro = a <= b ? (m >= a && m < b) : (m >= a || m < b); // soporta cruzar medianoche
+    if (dentro) return { key, ...t };
+  }
+  return null;
+}
+function proximoTurno() {
+  const m = new Date().getHours() * 60 + new Date().getMinutes();
+  const ts = Object.values(CONFIG.turnos).sort((x, y) => toMin(x.desde) - toMin(y.desde));
+  return ts.find(t => toMin(t.desde) > m) || ts[0];
+}
+const turno = () => turnoActual();
+const abierto = () => estado.abierto && !!turno();
+const categoriasVisibles = () => {
+  const t = turno() || proximoTurno();
+  return t.categorias;
+};
+const agotado = id => estado.agotados.includes(id);
+
+/* ---------- precios ---------- */
+function totalEmpanadas() {
+  const E = CONFIG.empanadas;
+  let pool = 0, aparte = 0;
+  for (const g of E.gustos) {
+    const q = state.emp[g.id] || 0;
+    if (!q) continue;
+    if (g.precio) aparte += q * g.precio; else pool += q;
+  }
+  const docenas = Math.floor(pool / 12), resto = pool % 12;
+  return docenas * E.precioDocena + resto * E.precioUnidad + aparte;
+}
+const precioSand = s => {
+  const base = CONFIG.sandwiches.items.find(i => i.id === s.id).precio;
+  const ex = s.extras.reduce((a, id) => a + CONFIG.sandwiches.extras.find(e => e.id === id).precio, 0);
+  return (base + ex) * s.qty;
+};
+const totalPapas = () => CONFIG.papas.reduce((a, p) => a + (state.papas[p.id] || 0) * p.precio, 0);
+const totalBebidas = () => CONFIG.bebidas.reduce((a, b) => a + (state.beb[b.id] || 0) * b.precio, 0);
+const total = () => totalEmpanadas() + state.sand.reduce((a, s) => a + precioSand(s), 0) + totalPapas() + totalBebidas();
+const sum = o => Object.values(o).reduce((a, b) => a + b, 0);
+const cantEmp = () => sum(state.emp);
+const cantItems = () => cantEmp() + state.sand.reduce((a, s) => a + s.qty, 0) + sum(state.papas) + sum(state.beb);
+const tomaPedidos = () => abierto() && estado.pedidosWhatsapp;
+
+/* ---------- render ---------- */
+function renderHeader() {
+  document.title = CONFIG.nombre + " · Pedidos";
+  $("#shopName").textContent = CONFIG.nombre;
+  $("#shopDir").textContent = "📍 " + CONFIG.direccion;
+  const t = turno();
+  const po = $("#pillOpen");
+  if (abierto()) {
+    po.textContent = "Abierto · " + t.nombre;
+    po.classList.remove("closed");
+    $("#pillTime").textContent = `Retiro ~${estado.demoraRetiro} min · Envío ~${estado.demoraRetiro + estado.extraEnvio} min`;
+  } else {
+    po.textContent = "Cerrado";
+    po.classList.add("closed");
+    const p = proximoTurno();
+    $("#pillTime").textContent = estado.abierto ? `Abrimos a las ${p.desde}` : "Hoy no tomamos pedidos";
+  }
+  const av = $("#aviso");
+  av.hidden = !estado.aviso;
+  av.textContent = estado.aviso;
+
+  const cw = $("#cerradoWp");
+  cw.hidden = !(abierto() && !estado.pedidosWhatsapp);
+  cw.innerHTML = `<b>📵 Ahora no estamos tomando pedidos por WhatsApp</b>
+    Tenemos mucha demanda. Podés hacer tu pedido llamando a:<br>
+    ${CONFIG.telefonos.map(t => `<a href="tel:${t.numero.replace(/\D/g, "")}">📞 ${esc(t.nombre)}: ${esc(t.numero)}</a>`).join("")}`;
+}
+
+const LABELS = {
+  empanadas:  { ic: "🥟", t: "Empanadas" },
+  sandwiches: { ic: "🥪", t: "Sanguchería" },
+  papas:      { ic: "🍟", t: "Papas fritas" },
+  bebidas:    { ic: "🥤", t: "Bebidas" }
+};
+function renderTabs() {
+  const cats = categoriasVisibles();
+  if (!cats.includes(state.tab)) state.tab = cats[0];
+  $("#tabs").innerHTML = Object.entries(LABELS).map(([c, l]) => {
+    const off = !cats.includes(c);
+    return `<button class="tab ${state.tab === c ? "on" : ""} ${off ? "off" : ""}" data-tab="${c}">
+      ${off ? `<span class="badge">noche</span>` : ""}<span class="ic">${l.ic}</span>${l.t}</button>`;
+  }).join("");
+}
+
+function stepper(kind, id, q, dis) {
+  if (dis) return `<span class="tag">Agotado</span>`;
+  return `<div class="step">
+    ${q ? `<button data-dec="${kind}:${id}" aria-label="Quitar">−</button><span>${q}</span>` : ""}
+    <button class="plus" data-inc="${kind}:${id}" aria-label="Agregar">+</button></div>`;
+}
+
+function renderMenu() {
+  const cats = categoriasVisibles();
+  const tab = state.tab;
+  let h = "";
+  if (!cats.includes(tab)) {
+    h = `<div class="locked">Disponible solo en el turno noche.</div>`;
+  } else if (tab === "empanadas") {
+    const E = CONFIG.empanadas, n = cantEmp();
+    const falta = n % 12 ? 12 - (n % 12) : 0;
+    h = `<section><h2>Empanadas</h2>
+      <p class="sub">${money(E.precioUnidad)} c/u · ${money(E.precioDocena)} la docena (podés mezclar gustos)</p>
+      <div class="list">${E.gustos.map(g => {
+        const q = state.emp[g.id] || 0, ag = agotado(g.id);
+        return `<div class="row ${ag ? "agotado" : ""}"><div class="name">${esc(g.nombre)}${g.precio ? `<small>${money(g.precio)} c/u</small>` : ""}</div>${stepper("emp", g.id, q, ag)}</div>`;
+      }).join("")}</div>
+      ${n ? `<p class="sub" style="margin-top:10px">Llevás ${n}${falta && n > 6 ? ` · te faltan ${falta} para la docena` : ""}</p>` : ""}
+    </section>`;
+  } else if (tab === "sandwiches") {
+    h = `<section><h2>Sándwiches</h2><p class="sub">${esc(CONFIG.sandwiches.nota)} Armalo a tu gusto: pan árabe sin costo extra.</p>
+      ${CONFIG.sandwiches.items.map(s => {
+        const ag = agotado(s.id);
+        const enCarrito = state.sand.filter(x => x.id === s.id).reduce((a, x) => a + x.qty, 0);
+        return `<div class="card"><div class="name"><b>${esc(s.nombre)}</b>${s.desc ? `<small>${esc(s.desc)}</small>` : ""}<small><b style="display:inline;color:var(--ink)">${money(s.precio)}</b>${enCarrito ? ` · ${enCarrito} en tu pedido` : ""}</small></div>
+          ${ag ? `<span class="tag">Agotado</span>` : `<button class="btn" data-armar="${s.id}">Armar</button>`}</div>`;
+      }).join("")}</section>`;
+  } else if (tab === "papas") {
+    h = `<section><h2>Papas</h2><p class="sub">&nbsp;</p><div class="list">${CONFIG.papas.map(p => {
+      const q = state.papas[p.id] || 0, ag = agotado(p.id);
+      return `<div class="row ${ag ? "agotado" : ""}"><div class="name">${esc(p.nombre)}<small>${p.desc ? esc(p.desc) + " · " : ""}${money(p.precio)}</small></div>${stepper("papas", p.id, q, ag)}</div>`;
+    }).join("")}</div></section>`;
+  } else if (tab === "bebidas") {
+    h = `<section><h2>Bebidas</h2><p class="sub">Sin alcohol</p><div class="grid">${CONFIG.bebidas.map(b => {
+      const q = state.beb[b.id] || 0, ag = agotado(b.id);
+      return `<div class="drink ${ag ? "agotado" : ""}"><span class="ic">${b.ic || "🥤"}</span><b>${esc(b.nombre)}</b><small>${money(b.precio)}</small>${stepper("beb", b.id, q, ag)}</div>`;
+    }).join("")}</div></section>`;
+  }
+  $("#menu").innerHTML = h;
+}
+
+function renderBar() {
+  const n = cantItems();
+  $("#bar").classList.toggle("hide", !n);
+  $("#barQty").textContent = `Ver pedido (${n})`;
+  $("#barTotal").textContent = money(total());
+}
+
+function renderAll() { renderHeader(); renderMiPedido(); renderTabs(); renderMenu(); renderBar(); }
+
+/* ---------- armar sándwich ---------- */
+let editing = null;
+function openSand(id) {
+  const S = CONFIG.sandwiches, item = S.items.find(i => i.id === id);
+  editing = { id, pan: item.plato ? null : S.panes[0].id, guarn: item.plato ? S.guarniciones[0] : null, toppings: [], extras: [], nota: "", qty: 1 };
+  $("#sandTitle").textContent = item.nombre;
+  $("#sandBody").innerHTML = `
+    ${item.desc ? `<p class="note" style="margin-top:-4px">${esc(item.desc)}</p>` : ""}
+    ${item.plato ? `
+    <fieldset><legend>Guarnición</legend><div class="opts">${S.guarniciones.map((g, i) =>
+      `<label class="opt"><input type="radio" name="guarn" value="${esc(g)}" ${i ? "" : "checked"}><span>${esc(g)}</span></label>`).join("")}</div></fieldset>` : `
+    <fieldset><legend>Pan</legend><div class="opts">${S.panes.map((p, i) =>
+      `<label class="opt"><input type="radio" name="pan" value="${p.id}" ${i ? "" : "checked"}><span>${esc(p.nombre)}</span></label>`).join("")}</div></fieldset>
+    <fieldset><legend>Toppings <small>· sin costo</small></legend>
+      <div class="opts" id="tops">${S.toppings.map(t =>
+        `<label class="opt"><input type="checkbox" name="top" value="${esc(t)}"><span>${esc(t)}</span></label>`).join("")}</div>
+      <div class="quick"><button class="chip" id="allTops">✔ Completo (todo)</button><button class="chip" id="noTops">Sin nada</button></div>
+    </fieldset>`}
+    <fieldset><legend>Extras <small>· con costo</small></legend><div class="opts">${S.extras.map(e =>
+      `<label class="opt"><input type="checkbox" name="ext" value="${e.id}" ${agotado(e.id) ? "disabled" : ""}><span>${esc(e.nombre)} <em>+${money(e.precio)}</em></span></label>`).join("")}</div></fieldset>
+    <label class="f" for="sNota">Aclaración <span class="note">(opcional)</span></label>
+    <input class="in" id="sNota" placeholder="Ej: bien cocida, cortado al medio">
+    <div class="tot"><div class="step"><button id="sDec">−</button><span id="sQty">1</span><button class="plus" id="sInc">+</button></div><span id="sPrice"></span></div>
+    <button class="btn block" id="sAdd">Agregar al pedido</button>`;
+  const upd = () => {
+    const pan = document.querySelector('input[name="pan"]:checked'), gu = document.querySelector('input[name="guarn"]:checked');
+    editing.pan = pan ? pan.value : null; editing.guarn = gu ? gu.value : null;
+    editing.toppings = [...document.querySelectorAll('input[name="top"]:checked')].map(i => i.value);
+    editing.extras = [...document.querySelectorAll('input[name="ext"]:checked')].map(i => i.value);
+    $("#sQty").textContent = editing.qty;
+    $("#sPrice").textContent = money(precioSand(editing));
+  };
+  $("#sandBody").onchange = upd;
+  if ($("#allTops")) $("#allTops").onclick = () => { document.querySelectorAll('input[name="top"]').forEach(i => i.checked = true); upd(); };
+  if ($("#noTops")) $("#noTops").onclick = () => { document.querySelectorAll('input[name="top"]').forEach(i => i.checked = false); upd(); };
+  $("#sDec").onclick = () => { editing.qty = Math.max(1, editing.qty - 1); upd(); };
+  $("#sInc").onclick = () => { editing.qty++; upd(); };
+  $("#sAdd").onclick = () => {
+    upd(); editing.nota = $("#sNota").value.trim();
+    state.sand.push(editing); editing = null;
+    closeSheet("Sand"); renderMenu(); renderBar();
+  };
+  upd(); openSheet("Sand");
+}
+
+/* ---------- carrito ---------- */
+function sandDesc(s) {
+  const S = CONFIG.sandwiches, p = [];
+  if (s.guarn) p.push("con " + s.guarn.toLowerCase());
+  else {
+    p.push(S.panes.find(x => x.id === s.pan).nombre);
+    p.push(s.toppings.length === S.toppings.length ? "completo" : s.toppings.length ? s.toppings.join(", ") : "sin toppings");
+  }
+  if (s.extras.length) p.push("extra: " + s.extras.map(id => S.extras.find(e => e.id === id).nombre).join(", "));
+  if (s.nota) p.push(`"${s.nota}"`);
+  return p.join(" · ");
+}
+
+function renderCart() {
+  const E = CONFIG.empanadas, rows = [];
+  E.gustos.forEach(g => { const q = state.emp[g.id]; if (q) rows.push({ t: `${q} × ${g.nombre}`, d: "", rm: `emp:${g.id}` }); });
+  if (cantEmp()) rows.push({ t: `Empanadas (${cantEmp()})`, d: money(totalEmpanadas()), sub: true });
+  state.sand.forEach((s, i) => {
+    const it = CONFIG.sandwiches.items.find(x => x.id === s.id);
+    rows.push({ t: `${s.qty} × ${it.nombre}`, d: money(precioSand(s)), small: sandDesc(s), rm: `sand:${i}` });
+  });
+  CONFIG.papas.forEach(p => { const q = state.papas[p.id]; if (q) rows.push({ t: `${q} × ${p.nombre}`, d: money(q * p.precio), rm: `papas:${p.id}` }); });
+  CONFIG.bebidas.forEach(b => { const q = state.beb[b.id]; if (q) rows.push({ t: `${q} × ${b.nombre}`, d: money(q * b.precio), rm: `beb:${b.id}` }); });
+
+  $("#cartItems").innerHTML = rows.map(r => `<div class="it"><div>${r.sub ? `<b>${esc(r.t)}</b>` : esc(r.t)}${r.small ? `<small>${esc(r.small)}</small>` : ""}</div>
+    ${r.d ? `<span>${r.d}</span>` : ""}${r.rm ? `<button class="rm" data-rm="${r.rm}">Quitar</button>` : ""}</div>`).join("") || `<p class="note" style="padding:12px 0">Tu pedido está vacío.</p>`;
+
+  const envio = entrega() === "envio";
+  $("#envioFields").hidden = !envio;
+  $("#envioNote").textContent = "💬 El costo del envío te lo confirmamos por WhatsApp según tu dirección.";
+  $("#etaRetiro").textContent = `~${estado.demoraRetiro} min`;
+  $("#etaEnvio").textContent = `~${estado.demoraRetiro + estado.extraEnvio} min`;
+  $("#eta").textContent = `⏰ ${envio ? "Llega" : "Listo para retirar"} aprox. a las ${hhmm(eta())}`;
+  $("#vueltoWrap").hidden = pago() !== "Efectivo";
+  $("#cartTotal").textContent = money(total());
+  $("#totNote").textContent = envio ? "+ envío (te lo confirmamos)" : "";
+  $("#send").disabled = !tomaPedidos() || !cantItems();
+  $("#send").textContent = !abierto() ? "Estamos cerrados" : !estado.pedidosWhatsapp ? "Hoy pedidos solo por teléfono" : "Enviar pedido por WhatsApp";
+}
+
+const barrio = () => $("#zona").value.trim();
+
+const entrega = () => document.querySelector('input[name="entrega"]:checked').value;
+const pago = () => document.querySelector('input[name="pago"]:checked').value;
+const eta = () => new Date(Date.now() + (estado.demoraRetiro + (entrega() === "envio" ? estado.extraEnvio : 0)) * 60000);
+
+/* ---------- comanda para imprimir (datos viajan dentro del link, sin servidor) ---------- */
+const nuevoId = () => {
+  const abc = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; // sin letras confusas (O/0, I/1)
+  let s = ""; for (let i = 0; i < 4; i++) s += abc[Math.floor(Math.random() * abc.length)];
+  return s;
+};
+function datosComanda(id) {
+  const envio = entrega() === "envio", S = CONFIG.sandwiches;
+  return {
+    v: 1, id, shop: CONFIG.nombre, t: Date.now(), eta: hhmm(eta()),
+    n: $("#nombre").value.trim(), e: envio ? "e" : "r",
+    dir: envio ? $("#dir").value.trim() : "", ref: envio ? $("#ref").value.trim() : "",
+    z: envio ? barrio() : "", ze: null,
+    emp: CONFIG.empanadas.gustos.filter(g => state.emp[g.id]).map(g => [state.emp[g.id], g.nombre]),
+    empSub: totalEmpanadas(),
+    s: state.sand.map(s => [s.qty, S.items.find(x => x.id === s.id).nombre, sandDesc(s), precioSand(s)]),
+    p: CONFIG.papas.filter(p => state.papas[p.id]).map(p => [state.papas[p.id], p.nombre, state.papas[p.id] * p.precio]),
+    b: CONFIG.bebidas.filter(b => state.beb[b.id]).map(b => [state.beb[b.id], b.nombre, state.beb[b.id] * b.precio]),
+    tot: total(), pago: pago(), mod: modo.modifica ? 1 : 0,
+    vuelto: pago() === "Efectivo" ? $("#vuelto").value.trim() : "", nota: $("#nota").value.trim()
+  };
+}
+function b64u(bytes) {
+  let bin = ""; for (let i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
+  return btoa(bin).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+}
+async function pack(obj) {
+  const bytes = new TextEncoder().encode(JSON.stringify(obj));
+  try {
+    if (!("CompressionStream" in window)) throw 0;
+    const cs = new Blob([bytes]).stream().pipeThrough(new CompressionStream("deflate-raw"));
+    return "z" + b64u(new Uint8Array(await new Response(cs).arrayBuffer()));
+  } catch { return "j" + b64u(bytes); }
+}
+const urlComanda = () => CONFIG.urlComanda || new URL("comanda.html", location.href).href;
+
+function buildMessage(id, linkComanda) {
+  const L = [], envio = entrega() === "envio";
+  L.push(modo.modifica
+    ? `✏️ *MODIFICACIÓN DEL PEDIDO ${etiquetaId(id)}* — reemplaza al anterior`
+    : `*NUEVO PEDIDO ${etiquetaId(id)}* — ${CONFIG.nombre}`);
+  L.push(`👤 ${$("#nombre").value.trim()}`);
+  if (envio) {
+    L.push(`🛵 *Envío* a: ${$("#dir").value.trim()}`);
+    if (barrio()) L.push(`🗺️ Barrio: ${barrio()}`);
+    if ($("#ref").value.trim()) L.push(`📍 Ref: ${$("#ref").value.trim()}`);
+  } else L.push(`🏃 *Retiro* en el local`);
+  L.push(`⏰ Estimado: ${hhmm(eta())}`);
+  L.push("");
+  if (cantEmp()) {
+    L.push(`*Empanadas (${cantEmp()})*`);
+    CONFIG.empanadas.gustos.forEach(g => { const q = state.emp[g.id]; if (q) L.push(`• ${q} ${g.nombre}`); });
+    L.push(`  Subtotal: ${money(totalEmpanadas())}`);
+    L.push("");
+  }
+  if (state.sand.length) {
+    L.push(`*Sándwiches*`);
+    state.sand.forEach(s => {
+      const it = CONFIG.sandwiches.items.find(x => x.id === s.id);
+      L.push(`• ${s.qty} ${it.nombre} — ${money(precioSand(s))}`);
+      L.push(`  ${sandDesc(s)}`);
+    });
+    L.push("");
+  }
+  const pp = CONFIG.papas.filter(p => state.papas[p.id]);
+  if (pp.length) {
+    L.push(`*Papas*`);
+    pp.forEach(p => L.push(`• ${state.papas[p.id]} ${p.nombre} — ${money(state.papas[p.id] * p.precio)}`));
+    L.push("");
+  }
+  const bb = CONFIG.bebidas.filter(b => state.beb[b.id]);
+  if (bb.length) {
+    L.push(`*Bebidas*`);
+    bb.forEach(b => L.push(`• ${state.beb[b.id]} ${b.nombre} — ${money(state.beb[b.id] * b.precio)}`));
+    L.push("");
+  }
+  L.push(`💰 *Total: ${money(total())}*${envio ? " + envío (a confirmar)" : ""}`);
+  let pg = `💳 Pago: ${pago()}`;
+  if (pago() === "Efectivo" && $("#vuelto").value.trim()) pg += ` (paga con $${$("#vuelto").value.trim()})`;
+  L.push(pg);
+  if ($("#nota").value.trim()) L.push(`📝 ${$("#nota").value.trim()}`);
+  if (linkComanda) { L.push(""); L.push(`🖨️ Comanda: ${linkComanda}`); }
+  return L.join("\n");
+}
+
+const etiquetaId = id => /^\d+$/.test(id) ? `N° ${id}` : `#${id}`;
+
+// Número correlativo del día desde el contador (Apps Script). Si falla, código aleatorio.
+async function obtenerNumero() {
+  if (!CONFIG.contadorUrl) return nuevoId();
+  try {
+    const ctrl = new AbortController(), to = setTimeout(() => ctrl.abort(), 5000);
+    const r = await fetch(CONFIG.contadorUrl, { signal: ctrl.signal });
+    clearTimeout(to);
+    const j = await r.json();
+    if (j && Number.isInteger(j.n)) return String(j.n);
+  } catch {}
+  return nuevoId();
+}
+
+let ultimo = null; // evita gastar otro número si el cliente vuelve atrás y reenvía el mismo pedido
+async function send() {
+  const err = $("#err"), btn = $("#send");
+  err.textContent = "";
+  if (!$("#nombre").value.trim()) { err.textContent = "Poné tu nombre."; $("#nombre").focus(); return; }
+  if (entrega() === "envio" && !$("#dir").value.trim()) { err.textContent = "Falta la dirección de envío."; $("#dir").focus(); return; }
+
+  btn.disabled = true; btn.textContent = "Generando tu pedido…";
+  const firma = JSON.stringify({ ...datosComanda(""), t: 0, eta: "" });
+  const id = modo.modifica ? modo.modifica
+    : ultimo && ultimo.firma === firma ? ultimo.id : await obtenerNumero();
+  ultimo = { firma, id };
+
+  let link = "";
+  try { link = urlComanda() + "#" + await pack(datosComanda(id)); } catch { /* sin link: el pedido igual sale por texto */ }
+  const url = `https://wa.me/${CONFIG.whatsapp}?text=${encodeURIComponent(buildMessage(id, link))}`;
+
+  $("#okNum").textContent = etiquetaId(id);
+  $("#okNombre").textContent = $("#nombre").value.trim();
+  $("#okTxt").textContent = entrega() === "envio"
+    ? `Te lo llevamos aprox. a las ${hhmm(eta())}.`
+    : `Pasá a retirarlo aprox. a las ${hhmm(eta())} y decí tu nombre y número de pedido.`;
+  $("#okWa").href = url;
+  $("#okCancel").href = linkCancelar(id, $("#nombre").value.trim());
+  guardarPedido(id);
+  closeSheet("Cart"); openSheet("Ok");
+  renderCart();
+}
+
+/* ---------- modificar / cancelar un pedido ya enviado (guardado en el celular del cliente) ---------- */
+const modo = { modifica: null };
+const CAMPOS = ["nombre", "dir", "ref", "zona", "vuelto", "nota"];
+function guardarPedido(id) {
+  try {
+    const f = {}; CAMPOS.forEach(c => f[c] = $("#" + c).value);
+    localStorage.setItem("ultimoPedido", JSON.stringify({
+      id, t: Date.now(), emp: state.emp, papas: state.papas, beb: state.beb, sand: state.sand,
+      f, entrega: entrega(), pago: pago()
+    }));
+  } catch {}
+}
+function leerPedido() {
+  try {
+    const p = JSON.parse(localStorage.getItem("ultimoPedido") || "null");
+    return p && Date.now() - p.t < CONFIG.horasModificable * 3600000 ? p : null;
+  } catch { return null; }
+}
+function linkCancelar(id, nombre) {
+  const txt = `Hola! Quiero *CANCELAR* mi pedido ${etiquetaId(id)} a nombre de ${nombre}.`;
+  return `https://wa.me/${CONFIG.whatsapp}?text=${encodeURIComponent(txt)}`;
+}
+function renderMiPedido() {
+  const p = leerPedido(), box = $("#miPedido");
+  if (!p || modo.modifica) { box.hidden = true; return; }
+  box.hidden = false;
+  box.innerHTML = `<b>Tu último pedido: ${etiquetaId(p.id)}</b>
+    <span class="note">¿Te olvidaste algo o cambió la dirección?</span>
+    <div class="acciones">
+      <button class="btn" id="mpMod">✏️ Modificar</button>
+      <a class="btn ghost" href="${linkCancelar(p.id, p.f.nombre)}" target="_blank" rel="noopener">Cancelar</a>
+      <button class="x" id="mpX" aria-label="Ocultar">×</button>
+    </div>`;
+  $("#mpMod").onclick = () => {
+    state.emp = p.emp; state.papas = p.papas; state.beb = p.beb; state.sand = p.sand;
+    CAMPOS.forEach(c => $("#" + c).value = p.f[c] || "");
+    document.querySelector(`input[name="entrega"][value="${p.entrega}"]`).checked = true;
+    document.querySelector(`input[name="pago"][value="${p.pago}"]`).checked = true;
+    modo.modifica = p.id;
+    $("#modBanner").hidden = false;
+    $("#modBanner").textContent = `✏️ Estás modificando el pedido ${etiquetaId(p.id)}. Al enviarlo reemplaza al anterior.`;
+    renderAll(); renderCart(); openSheet("Cart");
+  };
+  $("#mpX").onclick = () => { box.hidden = true; };
+}
+
+/* ---------- sheets ---------- */
+function openSheet(n) { $("#bg" + n).classList.add("open"); $("#sheet" + n).classList.add("open"); document.body.style.overflow = "hidden"; }
+function closeSheet(n) { $("#bg" + n).classList.remove("open"); $("#sheet" + n).classList.remove("open"); document.body.style.overflow = ""; }
+
+/* ---------- eventos ---------- */
+document.addEventListener("click", e => {
+  const t = e.target.closest("button");
+  if (!t) return;
+  if (t.dataset.tab) { state.tab = t.dataset.tab; renderTabs(); renderMenu(); }
+  if (t.dataset.inc || t.dataset.dec) {
+    const [k, id] = (t.dataset.inc || t.dataset.dec).split(":");
+    const bag = state[k];
+    bag[id] = Math.max(0, (bag[id] || 0) + (t.dataset.inc ? 1 : -1));
+    if (!bag[id]) delete bag[id];
+    renderMenu(); renderBar();
+  }
+  if (t.dataset.armar) openSand(t.dataset.armar);
+  if (t.dataset.close) closeSheet(t.dataset.close);
+  if (t.dataset.rm) {
+    const [k, id] = t.dataset.rm.split(":");
+    if (k === "sand") state.sand.splice(+id, 1); else delete state[k][id];
+    renderCart(); renderMenu(); renderBar();
+    if (!cantItems()) closeSheet("Cart");
+  }
+});
+$("#bgSand").onclick = () => closeSheet("Sand");
+$("#bgCart").onclick = () => closeSheet("Cart");
+$("#bgOk").onclick = () => closeSheet("Ok");
+$("#openCart").onclick = () => { renderCart(); openSheet("Cart"); };
+$("#sheetCart").addEventListener("change", renderCart);
+$("#send").onclick = send;
+
+/* ---------- estado desde Google Sheets (opcional) ----------
+   Planilla con 2 columnas (clave, valor). Archivo > Compartir > Publicar en la web > CSV.
+     abierto        | SI
+     pedidos_whatsapp | SI      (NO = muestra "llamanos" con los teléfonos)
+     demora_retiro  | 30
+     extra_envio    | 15
+     agotados       | roquefort;esfijas
+     aviso          | Hoy hay mucha demora
+---------------------------------------------------------------- */
+async function cargarEstado() {
+  if (!CONFIG.sheetCsvUrl) return;
+  try {
+    const ctrl = new AbortController(); const to = setTimeout(() => ctrl.abort(), 8000);
+    const r = await fetch(CONFIG.sheetCsvUrl + (CONFIG.sheetCsvUrl.includes("?") ? "&" : "?") + "t=" + Date.now(), { signal: ctrl.signal });
+    clearTimeout(to);
+    const txt = await r.text(), kv = {};
+    txt.split(/\r?\n/).forEach(line => {
+      const i = line.indexOf(","); if (i < 0) return;
+      kv[line.slice(0, i).trim().toLowerCase()] = line.slice(i + 1).trim().replace(/^"|"$/g, "");
+    });
+    if (kv.abierto) estado.abierto = /^(si|sí|true|1)$/i.test(kv.abierto);
+    if (kv.pedidos_whatsapp) estado.pedidosWhatsapp = /^(si|sí|true|1)$/i.test(kv.pedidos_whatsapp);
+    if (+kv.demora_retiro) estado.demoraRetiro = +kv.demora_retiro;
+    if (kv.extra_envio !== undefined && !isNaN(+kv.extra_envio)) estado.extraEnvio = +kv.extra_envio;
+    if (kv.agotados !== undefined) estado.agotados = kv.agotados.split(/[;|]/).map(s => s.trim()).filter(Boolean);
+    if (kv.aviso !== undefined) estado.aviso = kv.aviso;
+    renderAll();
+    if ($("#sheetCart").classList.contains("open")) renderCart();
+  } catch (_) { /* sin conexión a la planilla: quedan los valores por defecto */ }
+}
+
+renderAll();
+cargarEstado();
+setInterval(() => { cargarEstado(); renderHeader(); }, 120000);
+</script>
+</body>
+</html>

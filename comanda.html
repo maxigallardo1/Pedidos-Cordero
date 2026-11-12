@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Comanda</title>
+<style>
+  /* ====== CONFIG DE IMPRESIÓN ======
+     Impresora POS-80C: rollo de 80 mm, área imprimible real 72 mm.
+     (Para rollo de 58 mm usar 48mm en las dos líneas) */
+  @page { size: 72mm auto; margin: 0; }
+  :root { --ancho: 72mm; }
+  /* ================================= */
+
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:Arial,Helvetica,sans-serif;color:#000;background:#e9e4dc}
+  .ticket{width:var(--ancho);margin:16px auto;background:#fff;padding:2mm 1.5mm 10mm;font-size:13px;line-height:1.3}
+  .c{text-align:center}
+  .shop{font-size:16px;font-weight:700}
+  .dirl{font-size:11px}
+  .id{font-size:30px;font-weight:900;letter-spacing:1px;margin:2px 0}
+  .tipo{font-size:20px;font-weight:900;border:2.5px solid #000;padding:3px 0;margin:6px 0}
+  .hr{border-top:1.5px dashed #000;margin:6px 0}
+  .row{display:flex;justify-content:space-between;gap:6px}
+  .lbl{font-weight:700}
+  h2{font-size:15px;font-weight:900;text-transform:uppercase;margin:6px 0 3px}
+  .it{display:flex;gap:6px;margin:2px 0}
+  .q{font-weight:900;font-size:16px;min-width:26px}
+  .n{flex:1;font-size:15px;font-weight:700}
+  .n small{display:block;font-weight:400;font-size:12.5px}
+  .p{white-space:nowrap}
+  .tot{font-size:20px;font-weight:900}
+  .big{font-size:15px;font-weight:700}
+  .nota{border:1.5px solid #000;padding:4px;margin-top:4px;font-weight:700}
+
+  .tools{width:var(--ancho);margin:0 auto 24px;display:flex;flex-direction:column;gap:8px;font-family:system-ui,sans-serif}
+  .tools button{padding:12px;border:0;border-radius:10px;background:#8a2a1c;color:#fff;font-weight:700;font-size:15px;cursor:pointer}
+  .tools p{font-size:13px;color:#555;text-align:center}
+  .err{max-width:420px;margin:40px auto;padding:20px;background:#fff;border-radius:12px;font-family:system-ui,sans-serif}
+
+  @media print{
+    body{background:#fff}
+    .ticket{margin:0;width:var(--ancho)}
+    .tools{display:none}
+  }
+</style>
+</head>
+<body>
+<div id="out"></div>
+
+<script>
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
+const money = n => "$" + Math.round(n).toLocaleString("es-AR");
+
+function b64uDecode(s) {
+  s = s.replace(/-/g, "+").replace(/_/g, "/");
+  const bin = atob(s + "===".slice((s.length + 3) % 4));
+  const out = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
+  return out;
+}
+async function unpack(str) {
+  const kind = str[0], bytes = b64uDecode(str.slice(1));
+  if (kind === "z") {
+    const ds = new Blob([bytes]).stream().pipeThrough(new DecompressionStream("deflate-raw"));
+    return JSON.parse(await new Response(ds).text());
+  }
+  return JSON.parse(new TextDecoder().decode(bytes));
+}
+
+function yaImpreso(id) { try { return JSON.parse(localStorage.getItem("impresos") || "[]").includes(id); } catch { return false; } }
+function marcarImpreso(id) {
+  try {
+    const l = JSON.parse(localStorage.getItem("impresos") || "[]");
+    if (!l.includes(id)) l.push(id);
+    localStorage.setItem("impresos", JSON.stringify(l.slice(-300)));
+  } catch {}
+}
+
+function render(o) {
+  const fecha = new Date(o.t);
+  const f = fecha.toLocaleDateString("es-AR", { day: "2-digit", month: "2-digit" }) + " " +
+            fecha.toLocaleTimeString("es-AR", { hour: "2-digit", minute: "2-digit", hour12: false });
+  const envio = o.e === "e";
+  let h = `<div class="ticket">
+    <div class="c shop">${esc(o.shop)}</div>
+    ${o.mod ? `<div class="c tipo" style="background:#000;color:#fff">MODIFICADO<br><span style="font-size:13px">tirá la comanda anterior</span></div>` : ""}
+    <div class="c id">${/^\d+$/.test(o.id) ? "N° " : "#"}${esc(o.id)}</div>
+    <div class="c">${esc(f)}</div>
+    <div class="c tipo">${envio ? "ENVÍO" : "RETIRA EN LOCAL"}</div>
+    <div class="row big"><span>Cliente:</span><span>${esc(o.n)}</span></div>
+    <div class="row big"><span>Para las:</span><span>${esc(o.eta)}</span></div>`;
+  if (envio) {
+    h += `<div class="hr"></div>
+      <div class="big">${esc(o.dir)}</div>
+      ${o.ref ? `<div>Ref: ${esc(o.ref)}</div>` : ""}
+      ${o.z ? `<div>Barrio: ${esc(o.z)}</div>` : ""}`;
+  }
+  h += `<div class="hr"></div>`;
+
+  if (o.emp && o.emp.length) {
+    const n = o.emp.reduce((a, x) => a + x[0], 0);
+    h += `<h2>Empanadas (${n})</h2>` + o.emp.map(([q, nm]) =>
+      `<div class="it"><span class="q">${q}</span><span class="n">${esc(nm)}</span></div>`).join("");
+    h += `<div class="row"><span></span><span>${money(o.empSub)}</span></div>`;
+  }
+  if (o.s && o.s.length) {
+    h += `<h2>Sándwiches</h2>` + o.s.map(([q, nm, d, p]) =>
+      `<div class="it"><span class="q">${q}</span><span class="n">${esc(nm)}<small>${esc(d)}</small></span><span class="p">${money(p)}</span></div>`).join("");
+  }
+  if (o.p && o.p.length) {
+    h += `<h2>Papas</h2>` + o.p.map(([q, nm, p]) =>
+      `<div class="it"><span class="q">${q}</span><span class="n">${esc(nm)}</span><span class="p">${money(p)}</span></div>`).join("");
+  }
+  if (o.b && o.b.length) {
+    h += `<h2>Bebidas</h2>` + o.b.map(([q, nm, p]) =>
+      `<div class="it"><span class="q">${q}</span><span class="n">${esc(nm)}</span><span class="p">${money(p)}</span></div>`).join("");
+  }
+
+  h += `<div class="hr"></div>`;
+  if (envio) h += `<div class="row"><span>Envío</span><span>${o.ze == null ? "+ ________" : money(o.ze)}</span></div>`;
+  h += `<div class="row tot"><span>TOTAL</span><span>${money(o.tot)}</span></div>`;
+  h += `<div class="row big"><span>Pago:</span><span>${esc(o.pago)}</span></div>`;
+  if (o.vuelto) h += `<div class="row"><span>Paga con:</span><span>$${esc(o.vuelto)}</span></div>`;
+  if (o.nota) h += `<div class="nota">NOTA: ${esc(o.nota)}</div>`;
+  h += `</div>`;
+
+  const clave = o.id + (o.mod ? "-mod-" + o.t : "");
+  const repetido = yaImpreso(clave);
+  h += `<div class="tools">
+    <button id="print">${repetido ? "Reimprimir" : "Imprimir"}</button>
+    <p>${repetido ? "⚠️ Esta comanda ya se imprimió en esta PC." : "Imprimiendo…"}</p></div>`;
+  $("#out").innerHTML = h;
+  $("#print").onclick = () => { marcarImpreso(clave); window.print(); };
+  document.title = `Comanda #${o.id}`;
+
+  // Auto-imprime solo la primera vez (evita duplicados si abrís el link de nuevo)
+  if (!repetido) setTimeout(() => { marcarImpreso(clave); window.print(); }, 300);
+}
+
+(async () => {
+  const data = location.hash.slice(1);
+  try {
+    if (!data) throw new Error("vacío");
+    render(await unpack(data));
+  } catch (e) {
+    $("#out").innerHTML = `<div class="err"><b>No se pudo leer la comanda.</b><br>El link está incompleto o dañado. Usá el pedido del mensaje de WhatsApp.</div>`;
+  }
+})();
+</script>
+</body>
+</html>
